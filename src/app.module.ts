@@ -7,6 +7,7 @@ import { configuration, validationSchema } from './config';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities';
 import { CommonModule } from './common/common.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -30,7 +31,9 @@ import { CommonModule } from './common/common.module';
     
     UsersModule,
     
-    CommonModule
+    CommonModule,
+    
+    AuthModule
   ],
   providers: []
 })
