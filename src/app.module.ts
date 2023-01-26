@@ -29,10 +29,8 @@ import { AuthModule } from './auth/auth.module';
       synchronize: true
     }),
     
-    UsersModule,
-    
     CommonModule,
-    
+    UsersModule,
     AuthModule
   ],
   providers: []

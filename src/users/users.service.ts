@@ -47,6 +47,7 @@ export class UsersService {
   async findOnePlainText(term: string){
 
     const user: User = await this.findOne(term);
+    if(!user) throw new BadRequestException(`User with ${term} is not recognized`);
     delete user.password;
     delete user.status;
 
@@ -82,7 +83,6 @@ export class UsersService {
   }
 
   async findOne(term: string) {
-    
     let user: User;
     if(validate(term)){
         user = await this.userRepository.findOneBy({ id: term });
@@ -95,7 +95,7 @@ export class UsersService {
           })
           .getOne();
       }
-    if(!user || !user.status) throw new NotFoundException('User not found');
+    if(!user || !user.status) return null;
 
     return user;
   
