@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { validate } from 'uuid'
 import { User } from './entities';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { BadRequestException } from '@nestjs/common/exceptions';
 
 @Injectable()
 export class UsersService {
@@ -19,36 +19,95 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     try {
       const user = this.userRepository.create( createUserDto );
-      const aux = await this.userRepository.save(user);
-
-      console.log(aux);
-
-      return user;
+      await this.userRepository.save(user);
+      delete createUserDto.password;
+      return  createUserDto;
 
     } catch (error) {
       this.handlerException(error);
     }
   }
 
-  findAll() {
-    return {message:`This action returns all users`};
+  async findAll({ limit=10, offset=0 }) {
+
+    try{
+      const users = await  this.userRepository.find({
+        where: { status: true }, 
+        select:{ email: true, name: true, id: true },
+        take: limit,
+        skip: offset
+      })
+      return users;
+    }
+    catch(error){
+      this.handlerException(error);
+    }
+  }
+  
+  async findOnePlainText(term: string){
+
+    const user: User = await this.findOne(term);
+    delete user.password;
+    delete user.status;
+
+    return user;
+  }
+  
+  async update(id: string, updateUserDto: UpdateUserDto) {
+      
+        const user = await this.findOne(id);
+      try{
+        await this.userRepository.update(user,updateUserDto);
+
+        delete user.password;
+        delete user.status;
+        delete user.google;
+        return {
+          ...user,
+          ...updateUserDto
+        }
+      }catch(error){
+        this.handlerException(error);
+      }
   }
 
-  findOne(id: number) {
-    return {message:`This action returns a #${id} user`};
+  async remove(id: string) {
+    const user = await this.findOne(id);
+
+    await this.userRepository.update(user, {
+      status: false
+    })
+    return {message:'User has been deleted'};
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return {message:`This action updates a #${id} user`};
-  }
+  async findOne(term: string) {
+    
+    let user: User;
+    if(validate(term)){
+        user = await this.userRepository.findOneBy({ id: term });
+    }else{
+      user = await this.userRepository.createQueryBuilder("user")
+          .select(['user.id', 'user.email', 'user.name', 'user.password','user.status'])
+          .where("user.name = :name OR user.email = :email", {
+            email: term,
+            name: term
+          })
+          .getOne();
+      }
+    if(!user || !user.status) throw new NotFoundException('User not found');
 
-  remove(id: number) {
-    return {message:`This action removes a #${id} user`};
+    return user;
+  
   }
 
 
   private handlerException(error: any){
+    console.log(error);
     this.logger.error(error);
     if(error.code === '23505') throw new BadRequestException(`${error.detail}`);
+    
+    throw new InternalServerErrorException('Report to the admin');
   }
+
+  
 }

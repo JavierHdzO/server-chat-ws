@@ -32,4 +32,10 @@ export class User {
     })
     google: boolean;
 
+    @Column({
+        type:'bool',
+        default: true
+    })
+    status: boolean;
+
 }

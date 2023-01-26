@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { configuration, validationSchema } from './config';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -27,7 +28,9 @@ import { User } from './users/entities';
       synchronize: true
     }),
     
-    UsersModule
+    UsersModule,
+    
+    CommonModule
   ],
   providers: []
 })
