@@ -8,13 +8,15 @@ export class User {
 
     @Column({
         type: 'text',
-        nullable:false
+        nullable:false,
+        unique: true
     })
     name:string;
 
     @Column({
         type: 'text',
-        nullable: false
+        nullable: false,
+        unique: true
     })
     email: string;
 
