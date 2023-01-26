@@ -55,28 +55,29 @@ export class UsersService {
   
   async update(id: string, updateUserDto: UpdateUserDto) {
       
-        const user = await this.findOne(id);
+        
       try{
-        await this.userRepository.update(user,updateUserDto);
+        const user = await this.userRepository.preload({
+          id,
+          ...updateUserDto
+        });
 
         delete user.password;
         delete user.status;
         delete user.google;
-        return {
-          ...user,
-          ...updateUserDto
-        }
+        return user;
+
       }catch(error){
         this.handlerException(error);
       }
   }
 
   async remove(id: string) {
-    const user = await this.findOne(id);
 
-    await this.userRepository.update(user, {
-      status: false
-    })
+    const user = await this.userRepository.preload({id, status: false});
+
+    if( !user ) throw new NotFoundException('User not found');
+
     return {message:'User has been deleted'};
   }
 
