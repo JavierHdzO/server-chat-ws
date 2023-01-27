@@ -6,5 +6,6 @@ export const validationSchema = joi.object({
     USERNAME_DB: joi.string(),
     NAME_DB: joi.string(),
     HOST_DB: joi.string(),
-    PORT_DB: joi.string()
+    PORT_DB: joi.string(),
+    SECRET_KEY_JWT: joi.string()
 });

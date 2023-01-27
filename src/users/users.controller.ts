@@ -4,6 +4,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { ParseUUIDPipe } from '@nestjs/common/pipes';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { Role } from 'src/auth/enum/roles.enum';
 
 @Controller('users')
 export class UsersController {
@@ -31,6 +33,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @Auth(Role.User)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
   }

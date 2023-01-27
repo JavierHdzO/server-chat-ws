@@ -34,6 +34,13 @@ export class User {
     google: boolean;
 
     @Column({
+        type:'text',
+        array:true,
+        default:['user']
+    })
+    roles:string[];
+
+    @Column({
         type:'bool',
         default: true
     })

@@ -76,7 +76,7 @@ export class UsersService {
   async remove(id: string) {
 
     const user = await this.userRepository.preload({id, status: false});
-
+    
     if( !user ) throw new NotFoundException('User not found');
 
     return {message:'User has been deleted'};
