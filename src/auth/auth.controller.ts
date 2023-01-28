@@ -16,8 +16,8 @@ export class AuthController {
 
   @UseGuards( JwtAuthGuard )
   @Get('refresh')
-  async refreshToken(@User('id') id){
-    return this.authService.refresh(id);
+  async refreshToken(@User() user){
+    return this.authService.refresh(user);
   }
   
 }

@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/users/entities';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Conversation } from './conversation.entity';
 
 export class Message{
 
@@ -6,26 +8,22 @@ export class Message{
     id:string;
 
     @Column({
-        type:'timestamp'
-    })
-    sent_datetime: Date;
-
-    @Column({
         type:'text'
     })
     message:string;
 
-    @Column()
-    sender_user_id
+    @Column({
+        type:'timestamp'
+    })
+    sent_datetime: Date;
 
-    @Column()
-    sender_keep
+    @ManyToOne( 
+        type => User, //Entity Class
+        user => user.messages 
+        )
+    user: User
 
-    reply_to_message_id
-
-
-    @Column()
-    thread_root_message_id
-
+    @ManyToOne( type => Conversation, conversation => conversation.messages )
+    conversation: Conversation;
     
 }

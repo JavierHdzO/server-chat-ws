@@ -3,6 +3,7 @@ import { compareSync } from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 import { UserConstrain } from 'src/users/interfaces/user.interface';
 import { JwtService } from '@nestjs/jwt';
+import { User } from 'src/users/entities';
 
 
 @Injectable()
@@ -22,8 +23,6 @@ export class AuthService {
   }
 
   async login(user: UserConstrain){
-
-    
     const payload = { id:user.id };
 
     return {
@@ -33,11 +32,10 @@ export class AuthService {
 
   }
 
-  refresh(id: string){
-    const token = this.jwtService.sign({ id });
-    
+  refresh(user:User){
+    const token = this.jwtService.sign({ id:user.id });
     return{
-      ok:true,
+      user:user,
       refresh_access_token: token
     }
   }
