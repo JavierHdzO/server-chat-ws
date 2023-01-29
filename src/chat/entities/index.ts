@@ -1,2 +1,2 @@
 export { Message } from "./message.entity";
-export { Room } from "./conversation.entity";
+export { Conversation } from "./conversation.entity";

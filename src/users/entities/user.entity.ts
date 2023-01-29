@@ -1,7 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { hashSync, genSaltSync } from 'bcrypt';
-import { Conversation } from 'src/chat/entities/conversation.entity';
-import { Message } from 'src/chat/entities';
+import { Conversation, Message } from 'src/chat/entities';
 
 @Entity()
 export class User {
@@ -48,13 +47,16 @@ export class User {
     })
     status: boolean;
 
-    @ManyToMany( type => Conversation )
+    @ManyToMany( () => Conversation, conversation => conversation.members, {
+        eager: true
+    } )
     @JoinTable()
-    conversations: Conversation[];
+    conversations?: Conversation[];
 
-    @OneToMany( type => Message, message => message.user )
-    // @JoinTable()
-    messages: Message[];
+    @OneToMany( () => Message, message => message.user, {
+        eager: true
+    } )
+    messages?: Message[];
 
     @BeforeInsert()
     hashPassword(){

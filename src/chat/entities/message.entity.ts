@@ -2,6 +2,7 @@ import { User } from 'src/users/entities';
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { Conversation } from './conversation.entity';
 
+@Entity()
 export class Message{
 
     @PrimaryGeneratedColumn('uuid')
@@ -13,17 +14,18 @@ export class Message{
     message:string;
 
     @Column({
-        type:'timestamp'
+        type:'timestamp',
+        default: () => "CURRENT_TIMESTAMP"
     })
     sent_datetime: Date;
 
     @ManyToOne( 
-        type => User, //Entity Class
+        () => User, //Entity Class
         user => user.messages 
         )
     user: User
 
-    @ManyToOne( type => Conversation, conversation => conversation.messages )
-    conversation: Conversation;
+    @ManyToOne( () => Conversation, conversation => conversation.messages )
+    conversation?: Conversation;
     
 }

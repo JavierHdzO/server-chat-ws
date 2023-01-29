@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { configuration, validationSchema } from './config';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities';
+import { Conversation, Message } from './chat/entities';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
@@ -26,7 +27,7 @@ import { ChatModule } from './chat/chat.module';
       username:process.env.USERNAME_DB,
       password:process.env.PASSWORD_DB,
       database:process.env.NAME_DB,
-      entities:[ User ],
+      entities:[ User, Message, Conversation ],
       synchronize: true
     }),
     

@@ -8,9 +8,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: any) {
     console.log("conectado");
+    this.chatService.createConversation();
+    return { 'ok':"ok" }
   }
 
   handleConnection(client: any, ...args: any[]) {
+    this.chatService.findOneConversation()
     console.log("disconnected");
   }
 
