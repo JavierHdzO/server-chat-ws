@@ -47,15 +47,13 @@ export class User {
     })
     status: boolean;
 
-    @ManyToMany( () => Conversation, conversation => conversation.members, {
-        eager: true
-    } )
-    @JoinTable()
-    conversations?: Conversation[];
+    // @ManyToMany( () => Conversation, conversation => conversation.members, {
+    //     eager: true
+    // } )
+    // @JoinTable()
+    // conversations?: Conversation[];
 
-    @OneToMany( () => Message, message => message.user, {
-        eager: true
-    } )
+    @OneToMany( () => Message, message => message.user)
     messages?: Message[];
 
     @BeforeInsert()

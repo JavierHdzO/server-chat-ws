@@ -31,6 +31,8 @@ export class ChatService {
     async createConversation(){
 
         const user = await this.userRepository.findOneBy({id:'0e3d1273-4a7a-4b7f-8b2a-4d400f4835e3'});
+        const user2 = await this.userRepository.findOneBy({id:'dd6365cc-13b6-4f63-870b-c9aa6c10c225'});
+        
         
        
         const conversation =  this.conversationRepository.create({
@@ -38,30 +40,53 @@ export class ChatService {
             messages:[await this.messageRepository.save(this.messageRepository.create({
                 message:'Mensaje de prueba',
                 user
-            }))]
+            }))],
+            members:[user, user2]
         });
 
         const savedConv = await this.conversationRepository.save(conversation);
 
-      
-
-
         console.log( savedConv );
     }
 
-    async findOneConversation(){
+    async findOneConversation( ): Promise<Conversation>{
 
-        const conversation = await this.conversationRepository.createQueryBuilder('conversation')
-        .leftJoin("conversation.members", "user1")
-        .leftJoin("conversation.members", "user2")
-        .where("user1.id = :user1Id",{
-            user1Id:"a1081abd-d1b3-420b-b778-f23d1ab97241",
-            // user2Id:"dd6365cc-13b6-4f63-870b-c9aa6c10c225"
+        // if(!userOne.id || !userTwo.id) return null;
+        const conversation = await this.conversationRepository.createQueryBuilder("conversation")
+        .leftJoinAndSelect('conversation.members', "user1")
+        .leftJoinAndSelect('conversation.members', "user2")
+        // .leftJoinAndSelect('conversation.messages', "message")
+        // .leftJoinAndSelect('message.user', "user")
+        // .orderBy('message.sent_datetime', 'ASC')
+        .where('(user1.id = :user1Id and user2.id = :user2Id) or (user1.id = :user2Id and user2.id = :user1Id)',
+        {
+            user1Id:'dd6365cc-13b6-4f63-870b-c9aa6c10c225',
+            user2Id:'0e3d1273-4a7a-4b7f-8b2a-4d400f4835e3',
         })
-        .getMany();
+        .getOne();
 
-     
-        console.log(conversation);
+        
+        
+
+        return conversation;
+
+    }
+
+    async findMessageByConversation( conversationParam: Conversation): Promise<Message[]>{
+
+        const conversation = await this.conversationRepository.createQueryBuilder("conversation")
+            .leftJoinAndSelect("conversation.messages", 'message')
+            .leftJoinAndSelect("message.user", "user")
+            .orderBy("message.sent_datetime", "ASC")
+            .where("conversation.id = :conversationId", { conversationId: conversationParam.id })
+            .getOne();
+        
+        if( !conversation ) throw new Error();
+
+        // const conversation =
+        
+        console.log(conversation.messages);
+        return conversation.messages;
 
     }
 
@@ -72,6 +97,8 @@ export class ChatService {
     async deleteConversation(){
 
     }
+
+    
 
 
 }

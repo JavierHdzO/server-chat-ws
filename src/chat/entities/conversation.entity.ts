@@ -14,11 +14,11 @@ export class Conversation{
     })
     name:string;
 
-    @ManyToMany( () => User, user => user.conversations)
-    // @JoinTable()
+    @ManyToMany( () => User)
+    @JoinTable()
     members: User[];
 
-    @OneToMany( () => Message, message => message.conversation)
+    @OneToMany( () => Message, message => message.conversation, {eager:true})
     messages: Message[];
     
 

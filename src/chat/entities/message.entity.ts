@@ -21,8 +21,8 @@ export class Message{
 
     @ManyToOne( 
         () => User, //Entity Class
-        user => user.messages 
-        )
+        user => user.messages,
+    { eager: true })
     user: User
 
     @ManyToOne( () => Conversation, conversation => conversation.messages )
