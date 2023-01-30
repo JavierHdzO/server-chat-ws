@@ -1,20 +1,48 @@
-import { WebSocketGateway } from '@nestjs/websockets';
+import { JwtService } from '@nestjs/jwt';
+import { WebSocketGateway, SubscribeMessage, WebSocketServer, WsException } from '@nestjs/websockets';
 import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets/interfaces';
-import { ChatService } from './chat.service';
+import { Socket, Server } from 'socket.io';
+import { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
+import { ChatService } from './services/chat.service';
 
 @WebSocketGateway({ cors: true })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly chatService: ChatService) {}
 
-  handleDisconnect(client: any) {
-    console.log("conectado");
-    this.chatService.createConversation();
-    return { 'ok':"ok" }
+  @WebSocketServer() wss: Server;
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly jwtService: JwtService) {}
+
+  async handleConnection(client: Socket, ...args: any[]) {
+    const token = client.handshake.headers.authentication as string;
+
+    if(!token) throw new WsException('Token missing or incorrect');
+
+    let payload: JwtPayload;
+
+    try {
+      
+      payload = this.jwtService.verify( token );
+      await this.chatService.registerClient( client, payload.id );
+      
+      
+    } catch (error) {
+      console.log(error);
+      client.disconnect();
+      return;
+    }
+    
+    const clients = this.chatService.getOnlineClients();
+    this.wss.emit("getOnlineClients", clients);
+    // console.log(clients);
   }
 
-  handleConnection(client: any, ...args: any[]) {
-    this.chatService.findOneConversation()
-    console.log("disconnected");
+  handleDisconnect(client: Socket) {
+    this.chatService.removeClient(client);
   }
+
+  
+
+  
 
 }

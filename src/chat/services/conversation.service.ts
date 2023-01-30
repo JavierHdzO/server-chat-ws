@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities';
-import { Conversation, Message } from './entities';
+import { Conversation, Message } from '../entities';
 
 @Injectable()
-export class ChatService {
+export class ConversationService {
 
     constructor(
         @InjectRepository(User)
@@ -15,17 +15,6 @@ export class ChatService {
         @InjectRepository(Conversation)
         private readonly conversationRepository: Repository<Conversation>
     ){}
-
-//     const conversation = await connection
-//   .getRepository(Conversation)
-//   .createQueryBuilder("conversation")
-//   .leftJoin("conversation.user1", "user1")
-//   .leftJoin("conversation.user2", "user2")
-//   .where("(user1.id = :user1Id AND user2.id = :user2Id) OR (user1.id = :user2Id AND user2.id = :user1Id)", {
-//     user1Id: user1Id,
-//     user2Id: user2Id
-//   })
-//   .getOne();
 
 
     async createConversation(){
@@ -49,9 +38,10 @@ export class ChatService {
         console.log( savedConv );
     }
 
-    async findOneConversation( ): Promise<Conversation>{
+    async findOneConversation( userOne: User, userTwo: User ): Promise<Conversation>{
 
-        // if(!userOne.id || !userTwo.id) return null;
+        if(!userOne.id || !userTwo.id) return null;
+
         const conversation = await this.conversationRepository.createQueryBuilder("conversation")
         .leftJoinAndSelect('conversation.members', "user1")
         .leftJoinAndSelect('conversation.members', "user2")
@@ -60,14 +50,13 @@ export class ChatService {
         // .orderBy('message.sent_datetime', 'ASC')
         .where('(user1.id = :user1Id and user2.id = :user2Id) or (user1.id = :user2Id and user2.id = :user1Id)',
         {
-            user1Id:'dd6365cc-13b6-4f63-870b-c9aa6c10c225',
-            user2Id:'0e3d1273-4a7a-4b7f-8b2a-4d400f4835e3',
+            user1Id: userOne.id,
+            user2Id: userTwo.id,
         })
         .getOne();
 
-        
-        
-
+        if(!conversation) throw new Error();
+    
         return conversation;
 
     }
@@ -82,8 +71,6 @@ export class ChatService {
             .getOne();
         
         if( !conversation ) throw new Error();
-
-        // const conversation =
         
         console.log(conversation.messages);
         return conversation.messages;
