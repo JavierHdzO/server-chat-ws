@@ -8,7 +8,6 @@ export const User = createParamDecorator(
         const user:UserEntity = req.user;
         if(!user) throw new InternalServerErrorException();
 
-        console.log({data});
         delete user.password;
         delete user.google;
         delete user.status;
