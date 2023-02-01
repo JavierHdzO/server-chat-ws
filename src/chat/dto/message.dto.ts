@@ -10,4 +10,9 @@ export class MessageDto{
     @IsString()
     @MinLength(5)
     socketId: string;
+
+    @IsString()
+    @MinLength(1)
+    message:string;
+
 }

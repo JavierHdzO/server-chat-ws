@@ -1,12 +1,19 @@
-import { Injectable, BadGatewayException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
-import { UsersService } from 'src/users/users.service';
-import { SocketClient } from '../interfaces/socket-client.interface';
+import { User } from 'src/users/entities';
 import { ConversationService } from './conversation.service';
+import { UsersService } from 'src/users/users.service';
+import { MessageDto } from '../dto/message.dto';
+import { Conversation } from '../entities';
+import { SocketClient } from '../interfaces/socket-client.interface';
+import { Message } from '../interfaces/message.interface';
 
 @Injectable()
 export class ChatService {
 
+    private logger = new Logger(ChatService.name);
+    private user: User;
     private clients:SocketClient = {};
     private onlineUsers = [];
 
@@ -17,21 +24,21 @@ export class ChatService {
 
     async registerClient ( client: Socket, userId: string ): Promise<void>{
 
-        const userEntity  = await this.userService.findOne(userId);
-        if(!userEntity) throw new BadGatewayException();
+        this.user  = await this.userService.findOne(userId);
+        if(!this.user) throw new WsException('Not Authorized');
 
         this.clients[client.id] = {
             socket:client,
             user:{
-                id: userEntity.id,
-                name:userEntity.name
+                id: this.user.id,
+                name:this.user.name
             }
         };
 
         this.onlineUsers.push({
             socketId: client.id,
-            userId: userEntity.id,
-            name: userEntity.name
+            userId: this.user.id,
+            name: this.user.name
         });
     }
 
@@ -44,6 +51,81 @@ export class ChatService {
     getOnlineClients () {
 
         return this.onlineUsers;
+    }
+
+    async saveChat( message: MessageDto ){
+
+        const { userId, message:messageReceived } = message;
+
+        const toUser = await this.userService.findOne( userId );
+        if( !toUser ) throw new WsException('User not found');
+        
+        let conversation: Conversation;
+        try {
+            conversation = await this.conversationService.findOneAndUpdate(this.user, toUser, messageReceived);
+            if( !conversation ){
+                console.log("se creo una nueva conversacion");
+                conversation = await this.conversationService.createConversation( this.user, toUser, messageReceived );
+            }
+            console.log("se encontro la conversacion");
+            
+            return this.user.id;
+
+        } catch (error) {
+            this.logger.error(error);
+            console.log(error);
+            return null;
+        }
+        
+    }
+
+    async getClientMessages(userOneId: string, userTwoId: string){
+
+        const userOne  = await  this.userService.findOne(userOneId);
+        const userTwo =  await this.userService.findOne(userTwoId);
+
+        console.log({userOne});
+        console.log({userTwo});
+
+        if(!userOne || !userTwo) throw new WsException('Bad request');
+
+        const conversacion = await this.conversationService.findOne(userOne, userTwo);
+
+        if(!conversacion) throw new WsException('Bad request');
+
+        return await this.conversationService.findMessageByConversation(conversacion);
+
+    }
+
+    async getClientMessagesPlain(userOneId: string, userTwoId: string): Promise<any>{
+        
+        try {
+            const messagesEntity = await this.getClientMessages( userOneId, userTwoId );
+
+            if(messagesEntity.length <= 0) return [];
+
+            let messages: Message[] = [];
+
+            messagesEntity.forEach( messageEntity => {
+                messages.push({
+                    message: messageEntity.message,
+                    userId: messageEntity.id,
+                    name: messageEntity.user.name
+                });
+            });
+
+            return messages;
+        } catch (error) {
+            console.log(error);
+            this.logger.error(error);
+            return [];
+        }
+        
+    }
+
+
+    getClientById(clientId:string){
+        return this.clients[clientId];
     }
 
 

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities';
 import { Conversation, Message } from '../entities';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class ConversationService {
@@ -17,28 +18,24 @@ export class ConversationService {
     ){}
 
 
-    async createConversation(){
+    async createConversation(userOne: User, userTwo: User, message: string){
 
-        const user = await this.userRepository.findOneBy({id:'0e3d1273-4a7a-4b7f-8b2a-4d400f4835e3'});
-        const user2 = await this.userRepository.findOneBy({id:'dd6365cc-13b6-4f63-870b-c9aa6c10c225'});
-        
-        
        
         const conversation =  this.conversationRepository.create({
             name:'Primer teste',
             messages:[await this.messageRepository.save(this.messageRepository.create({
-                message:'Mensaje de prueba',
-                user
+                message,
+                user: userOne
             }))],
-            members:[user, user2]
+            members:[userOne, userTwo]
         });
 
-        const savedConv = await this.conversationRepository.save(conversation);
+        const savedConversation = await this.conversationRepository.save(conversation);
 
-        console.log( savedConv );
+        return savedConversation;
     }
 
-    async findOneConversation( userOne: User, userTwo: User ): Promise<Conversation>{
+    async findOne( userOne: User, userTwo: User ): Promise<Conversation>{
 
         if(!userOne.id || !userTwo.id) return null;
 
@@ -54,8 +51,6 @@ export class ConversationService {
             user2Id: userTwo.id,
         })
         .getOne();
-
-        if(!conversation) throw new Error();
     
         return conversation;
 
@@ -68,6 +63,7 @@ export class ConversationService {
             .leftJoinAndSelect("message.user", "user")
             .orderBy("message.sent_datetime", "ASC")
             .where("conversation.id = :conversationId", { conversationId: conversationParam.id })
+            .take(50)
             .getOne();
         
         if( !conversation ) throw new Error();
@@ -77,13 +73,25 @@ export class ConversationService {
 
     }
 
-    async updateConversation(){
+    async findOneAndUpdate(userOne:User, userTwo:User, message:string){
+        
+        const conversation: Conversation = await this.findOne(userOne, userTwo);
 
+        if(!conversation) return null;
+
+        const messageEntity = this.messageRepository.create({
+            message,
+            user: userOne,
+            conversation
+        });
+
+        await this.messageRepository.save(messageEntity);
+
+        return conversation;
     }
 
-    async deleteConversation(){
+   
 
-    }
 
     
 
