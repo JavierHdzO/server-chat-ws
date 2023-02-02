@@ -35,7 +35,7 @@ export class ConversationService {
         return savedConversation;
     }
 
-    async findOne( userOne: User, userTwo: User ): Promise<Conversation>{
+    async findOneByUsers( userOne: User, userTwo: User ): Promise<Conversation>{
 
         if(!userOne.id || !userTwo.id) return null;
 
@@ -56,6 +56,22 @@ export class ConversationService {
 
     }
 
+    async findOne(userOne: User, userTwo: User ): Promise<Conversation>{
+        if(!userOne.id || !userTwo.id) return null;
+
+        const conversation = await this.conversationRepository.createQueryBuilder("conversation")
+        .leftJoin('conversation.members', "user1")
+        .leftJoin('conversation.members', "user2")
+        .where('(user1.id = :user1Id and user2.id = :user2Id) or (user1.id = :user2Id and user2.id = :user1Id)',
+        {
+            user1Id: userOne.id,
+            user2Id: userTwo.id,
+        })
+        .getOne();
+    
+        return conversation;
+    }
+
     async findMessageByConversation( conversationParam: Conversation): Promise<Message[]>{
 
         const conversation = await this.conversationRepository.createQueryBuilder("conversation")
@@ -68,7 +84,6 @@ export class ConversationService {
         
         if( !conversation ) throw new Error();
         
-        console.log(conversation.messages);
         return conversation.messages;
 
     }
@@ -77,12 +92,13 @@ export class ConversationService {
         
         const conversation: Conversation = await this.findOne(userOne, userTwo);
 
+        console.log(conversation);
         if(!conversation) return null;
 
         const messageEntity = this.messageRepository.create({
             message,
             user: userOne,
-            conversation
+            conversation: conversation
         });
 
         await this.messageRepository.save(messageEntity);

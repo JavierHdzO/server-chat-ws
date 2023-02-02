@@ -63,6 +63,7 @@ export class ChatService {
         let conversation: Conversation;
         try {
             conversation = await this.conversationService.findOneAndUpdate(this.user, toUser, messageReceived);
+            // console.log(conversation);
             if( !conversation ){
                 console.log("se creo una nueva conversacion");
                 conversation = await this.conversationService.createConversation( this.user, toUser, messageReceived );
@@ -84,12 +85,11 @@ export class ChatService {
         const userOne  = await  this.userService.findOne(userOneId);
         const userTwo =  await this.userService.findOne(userTwoId);
 
-        console.log({userOne});
-        console.log({userTwo});
 
         if(!userOne || !userTwo) throw new WsException('Bad request');
 
-        const conversacion = await this.conversationService.findOne(userOne, userTwo);
+        const conversacion = await this.conversationService.findOneByUsers(userOne, userTwo);
+        console.log(conversacion);
 
         if(!conversacion) throw new WsException('Bad request');
 
@@ -114,6 +114,7 @@ export class ChatService {
                 });
             });
 
+            console.log(messages);
             return messages;
         } catch (error) {
             console.log(error);

@@ -54,10 +54,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.chatService.saveChat(data);
 
       const userOne = this.chatService.getClientById(client.id);
-      console.log(userOne.user);
       if(!userOne) return null;
-      
-      console.log("leegue aqui");
+
       client.to(data.socketId).emit('message-from-server', {
         message:data.message,
         userId:userOne.user.id,
@@ -67,7 +65,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(error);
       return null;
     }
-
   }
 
   @SubscribeMessage('get-client-messages')
@@ -79,7 +76,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if(!userOne) return null;
       
       const messages =  await this.chatService.getClientMessagesPlain( userOne.user.id, user.userId );
-      console.log({messages});
 
       client.emit('send-client-messages', { messages });
 
